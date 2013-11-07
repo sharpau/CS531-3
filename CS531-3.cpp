@@ -77,16 +77,16 @@ bool backtrack(State problem) {
 
 	// select most constrained variable
 	auto var = problem.selectUnassigned();
-	State::cell & cur = problem.board[var.first][var.second];
+	//State::cell & cur = problem.board[var.first][var.second];
 
 	// order cur.domain values from least to most constraining
 	problem.orderDomain(var.first, var.second);
 
-	for(auto v : cur.domain) {
+	for(auto v : problem.board[var.first][var.second].domain) {
 		State new_val = problem;
 		new_val.board[var.first][var.second].value = v;
 
-		bool inference = problem.constraintPropagation();
+		bool inference = new_val.constraintPropagation();
 		if(inference) {
 			// valid inference, continue to next var
 			bool result = backtrack(new_val);
@@ -103,8 +103,10 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	auto problems = loadProblems("sudoku.txt");
 	
-	problems[0].constraintPropagation();
-	bool result = backtrack(problems[0]);
+	for(auto p : problems) {
+		p.constraintPropagation();
+		bool result = backtrack(p);
+	}
 
 	for(auto s : solutions) {
 		std::cout << s.print();
