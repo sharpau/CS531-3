@@ -5,9 +5,9 @@
 std::vector<std::pair<int, int>>
 State::boxOtherCoords(int x, int y) {
 	std::vector<std::pair<int, int>> coords;
-	for(int i = 0; i++; i < 3) {
-		for(int j = 0; j++; j < 3) {
-			if(x%3 + i != x && y%3 + j != y) {
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			if(x%3 + i != x || y%3 + j != y) {
 				coords.push_back(std::make_pair(x%3 + i, y%3 + j));
 			}
 		}
