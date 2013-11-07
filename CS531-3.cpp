@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "State.h"
 
+std::vector<State> solutions;
+
 std::vector<State> loadProblems(std::string filename) {
 	std::fstream problems_file(filename);
 	std::vector<State> problems;
@@ -69,18 +71,30 @@ bool backtrack(State problem) {
 	*/
 
 	if(problem.isFullyAssigned()) {
+		solutions.push_back(problem);
 		return true;
 	}
 
 	// select most constrained variable
 	auto var = problem.selectUnassigned();
-	State::tile & cur = problem.board[var.first][var.second];
+	State::cell & cur = problem.board[var.first][var.second];
 
 	// order cur.domain values from least to most constraining
 	problem.orderDomain(var.first, var.second);
 
 	for(auto v : cur.domain) {
-		// TODO
+		State new_val = problem;
+		new_val.board[var.first][var.second].value = v;
+
+		bool inference = problem.constraintPropagation();
+		if(inference) {
+			// valid inference, continue to next var
+			bool result = backtrack(new_val);
+			if(result) {
+				return result;
+			}
+		}
+		// bad value choice, State new_val is reset
 	}
 	return false;
 }
@@ -89,7 +103,12 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	auto problems = loadProblems("sudoku.txt");
 	
+	problems[0].constraintPropagation();
 	bool result = backtrack(problems[0]);
+
+	for(auto s : solutions) {
+		std::cout << s.print();
+	}
 
 	return 0;
 }
