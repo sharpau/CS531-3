@@ -4,10 +4,8 @@
 #include "stdafx.h"
 #include "State.h"
 
-int _tmain(int argc, _TCHAR* argv[])
-{
-	// TODO: file IO
-	std::fstream problems_file("sudoku.txt");
+std::vector<State> loadProblems(std::string filename) {
+	std::fstream problems_file(filename);
 	std::vector<State> problems;
 
 	if(problems_file.is_open()) {
@@ -46,11 +44,13 @@ int _tmain(int argc, _TCHAR* argv[])
 			problems_file.getline(meta, 256);
 		}
 	}
+	return problems;
+}
 
-
-
+// returns success or failure
+bool backtrack(State problem) {
 	// backtracking pseudocode
-	// TODO: main, select_unassigned_var, order_domain_values, inference
+	// TODO: inference
 	/*
 	 params: assignment (initially empty), csp
 	 if assign complete return
@@ -67,6 +67,29 @@ int _tmain(int argc, _TCHAR* argv[])
 		remove var = value and inferences from assignment
 	return failure
 	*/
+
+	if(problem.isFullyAssigned()) {
+		return true;
+	}
+
+	// select most constrained variable
+	auto var = problem.selectUnassigned();
+	State::tile & cur = problem.board[var.first][var.second];
+
+	// order cur.domain values from least to most constraining
+	problem.orderDomain(var.first, var.second);
+
+	for(auto v : cur.domain) {
+		// TODO
+	}
+	return false;
+}
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+	auto problems = loadProblems("sudoku.txt");
+	
+	bool result = backtrack(problems[0]);
 
 	return 0;
 }
