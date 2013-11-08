@@ -68,15 +68,11 @@ State::updateDomains(void)
 					if(i != x && board[i][y].value != 0) {
 						// remove board[i][y].value from board[x][y].domain
 						board[x][y].domain.erase(std::remove(board[x][y].domain.begin(), board[x][y].domain.end(), board[i][y].value), board[x][y].domain.end());
-
-						assert(std::find(board[x][y].domain.begin(), board[x][y].domain.end(), board[i][y].value) == board[x][y].domain.end());
 					}
 
 					if(i != y && board[x][i].value != 0) {
 						// remove board[x][i].value from board[x][y].domain
 						board[x][y].domain.erase(std::remove(board[x][y].domain.begin(), board[x][y].domain.end(), board[x][i].value), board[x][y].domain.end());
-						
-						assert(std::find(board[x][y].domain.begin(), board[x][y].domain.end(), board[x][i].value) == board[x][y].domain.end());
 					}
 				}
 
@@ -85,9 +81,6 @@ State::updateDomains(void)
 					if(board[coords.first][coords.second].value != 0) {
 						// remove board[coords.first][coords.second].value from board[x][y].domain
 						board[x][y].domain.erase(std::remove(board[x][y].domain.begin(), board[x][y].domain.end(), board[coords.first][coords.second].value), board[x][y].domain.end());
-
-						
-						assert(std::find(board[x][y].domain.begin(), board[x][y].domain.end(), board[coords.first][coords.second].value) == board[x][y].domain.end());
 					}
 				}
 				
@@ -172,6 +165,40 @@ State::constraintPropagation(void)
 			}
 		}
 
+		// rule #2
+		for(int x = 0; x < 9; x++) {
+			for(int y = 0; y < 9; y++) {
+				for(auto v : board[x][y].domain) {
+					bool row_unique = true;
+					bool col_unique = true;
+					bool box_unique = true;
+
+					for(int i = 0; i < 9; i++) {
+						// if domain value exists in row cell's domain, it's not unique
+						if(i != x && std::find(board[i][y].domain.begin(), board[i][y].domain.end(), v) != board[i][y].domain.end()) {
+							row_unique = false;
+						}
+
+						// if domain value exists in column cell's domain, it's not unique
+						if(i != y && std::find(board[x][i].domain.begin(), board[x][i].domain.end(), v) != board[x][i].domain.end()) {
+							col_unique = false;
+						}
+					}
+
+					
+					for(auto coords : boxOtherCoords(x, y)) {
+						// if domain value exists in box cell's domain, it's not unique
+						if(std::find(board[coords.first][coords.second].domain.begin(), board[coords.first][coords.second].domain.end(), v) != board[coords.first][coords.second].domain.end()) {
+							box_unique = false;
+						}
+					}
+					if(row_unique || col_unique || box_unique) {
+						board[x][y].value = v;
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	return true;
