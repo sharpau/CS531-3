@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "State.h"
 
+extern unsigned long backtracks;
 std::vector<State> solutions;
 
 std::vector<State> loadProblems(std::string filename) {
@@ -94,6 +95,7 @@ bool backtrack(State problem) {
 				return result;
 			}
 		}
+		backtracks++;
 		// bad value choice, State new_val is reset
 	}
 	return false;
@@ -103,9 +105,11 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	auto problems = loadProblems("sudoku.txt");
 	
-	for(auto p : problems) {
-		p.constraintPropagation();
-		bool result = backtrack(p);
+	for(int i = 0; i < 20; i++) {
+		backtracks = 0;
+		problems[i].constraintPropagation();
+		bool result = backtrack(problems[i]);
+		solutions.back().num_backtracks = backtracks;
 	}
 
 	for(auto s : solutions) {

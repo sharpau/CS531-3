@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "State.h"
 
+unsigned long backtracks;
+
 // returns all other coord pairs in this location's local box
 std::vector<std::pair<int, int>>
 State::boxOtherCoords(int x, int y) {
@@ -12,11 +14,13 @@ State::boxOtherCoords(int x, int y) {
 			}
 		}
 	}
+	assert(coords.size() == 8);
 	return coords;
 }
 
 // returns true if every spot has an assignment, false otherwise
 bool State::isFullyAssigned(void) {
+	std::vector<std::vector<int>> alldiffs;
 	for(int i = 0; i < 9; i++) {
 		for(int j = 0; j < 9; j++) {
 			if(board[i][j].value == 0) {
@@ -24,6 +28,7 @@ bool State::isFullyAssigned(void) {
 			}
 		}
 	}
+
 	return true;
 }
 
@@ -48,6 +53,50 @@ State::selectUnassigned(void) {
 	}
 
 	return std::make_pair(x_min, y_min);
+}
+
+bool
+State::updateDomains(void)
+{
+	// update domains of unassigned
+	for(int x = 0; x < 9; x++) {
+		for(int y = 0; y < 9; y++) {
+			if(board[x][y].value == 0) {
+				// remove from domain any values assigned to other cells in row/col/box
+				// check rows and columns
+				for(int i = 0; i < 9; i++) {
+					if(i != x && board[i][y].value != 0) {
+						// remove board[i][y].value from board[x][y].domain
+						board[x][y].domain.erase(std::remove(board[x][y].domain.begin(), board[x][y].domain.end(), board[i][y].value), board[x][y].domain.end());
+
+						assert(std::find(board[x][y].domain.begin(), board[x][y].domain.end(), board[i][y].value) == board[x][y].domain.end());
+					}
+
+					if(i != y && board[x][i].value != 0) {
+						// remove board[x][i].value from board[x][y].domain
+						board[x][y].domain.erase(std::remove(board[x][y].domain.begin(), board[x][y].domain.end(), board[x][i].value), board[x][y].domain.end());
+						
+						assert(std::find(board[x][y].domain.begin(), board[x][y].domain.end(), board[x][i].value) == board[x][y].domain.end());
+					}
+				}
+
+				// check box
+				for(auto coords : boxOtherCoords(x, y)) {
+					if(board[coords.first][coords.second].value != 0) {
+						// remove board[coords.first][coords.second].value from board[x][y].domain
+						board[x][y].domain.erase(std::remove(board[x][y].domain.begin(), board[x][y].domain.end(), board[coords.first][coords.second].value), board[x][y].domain.end());
+
+						
+						assert(std::find(board[x][y].domain.begin(), board[x][y].domain.end(), board[coords.first][coords.second].value) == board[x][y].domain.end());
+					}
+				}
+				
+				if(board[x][y].domain.size() == 0) {
+					return false;
+				}
+			}
+		}
+	}
 }
 
 // forward-checking constraint propagation: returns false if a var ends up with empty domain
@@ -100,49 +149,25 @@ State::constraintPropagation(void)
 							if any domain sizes == 0 return false
 							applied = true
 	*/
+	
+	if(!updateDomains()) {
+		return false;
+	}
+
 	bool applied = true;
 	while(applied) {
 		applied = false; // only continue if some rule is applied
-
-		// update domains of unassigned
-		for(int x = 0; x < 9; x++) {
-			for(int y = 0; y < 9; y++) {
-				if(board[x][y].value == 0) {
-					// remove from domain any values assigned to other cells in row/col/box
-					// check rows and columns
-					for(int i = 0; i < 9; i++) {
-						if(i != x && board[i][y].value != 0) {
-							// remove board[i][y].value from board[x][y].domain
-							board[x][y].domain.erase(std::remove(board[x][y].domain.begin(), board[x][y].domain.end(), board[i][y].value), board[x][y].domain.end());
-						}
-
-						if(i != y && board[x][i].value != 0) {
-							// remove board[x][i].value from board[x][y].domain
-							board[x][y].domain.erase(std::remove(board[x][y].domain.begin(), board[x][y].domain.end(), board[x][i].value), board[x][y].domain.end());
-						}
-					}
-
-					// check box
-					for(auto coords : boxOtherCoords(x, y)) {
-						if(board[coords.first][coords.second].value != 0) {
-							// remove board[coords.first][coords.second].value from board[x][y].domain
-							board[x][y].domain.erase(std::remove(board[x][y].domain.begin(), board[x][y].domain.end(), board[coords.first][coords.second].value), board[x][y].domain.end());
-						}
-					}
-				
-					if(board[x][y].domain.size() == 0) {
-						return false;
-					}
-				}
-			}
-		}
-
 		// rule #1
 		for(int x = 0; x < 9; x++) {
 			for(int y = 0; y < 9; y++) {
 				if(board[x][y].value == 0 && board[x][y].domain.size() == 1) {
 					board[x][y].value = board[x][y].domain[0];
 					applied = true;
+
+					if(!updateDomains()) {
+						return false;
+					}
+
 				}
 			}
 		}
@@ -206,6 +231,7 @@ State::print(void) {
 	std::stringstream out;
 	out << metadata;
 	out << '\n';
+	out << "backtracks: " << num_backtracks << '\n';
 	for(int i = 0; i < 9; i++) {
 		for(int j = 0; j < 9; j++) {
 			out << board[i][j].value;
@@ -215,6 +241,9 @@ State::print(void) {
 			else if(j == 5 || j == 2) {
 				out << ' ';
 			}
+		}
+		if(i % 3 == 2) {
+			out << '\n';
 		}
 	}
 	return out.str();
