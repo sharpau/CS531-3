@@ -51,7 +51,7 @@ std::vector<State> loadProblems(std::string filename) {
 }
 
 // returns success or failure
-bool backtrack(State problem) {
+bool backtrack(State problem, const State::rule strongest) {
 	// backtracking pseudocode
 	// TODO: inference
 	/*
@@ -87,10 +87,10 @@ bool backtrack(State problem) {
 		State new_val = problem;
 		new_val.board[var.first][var.second].value = v;
 
-		bool inference = new_val.constraintPropagation();
+		bool inference = new_val.constraintPropagation(strongest);
 		if(inference) {
 			// valid inference, continue to next var
-			bool result = backtrack(new_val);
+			bool result = backtrack(new_val, strongest);
 			if(result) {
 				return result;
 			}
@@ -105,15 +105,17 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	auto problems = loadProblems("sudoku.txt");
 	
-	for(int i = 0; i < 20; i++) {
-		backtracks = 0;
-		problems[i].constraintPropagation();
-		bool result = backtrack(problems[i]);
-		solutions.back().num_backtracks = backtracks;
-	}
+	for(unsigned int r = State::SINGLE_DOMAIN; r < State::RULE_COUNT; r++) {
+		for(int i = 0; i < 5; i++) {
+			backtracks = 0;
+			problems[i].constraintPropagation((State::rule)r);
+			bool result = backtrack(problems[i], (State::rule)r);
+			solutions.back().num_backtracks = backtracks;
+		}
 
-	for(auto s : solutions) {
-		std::cout << s.print();
+		for(auto s : solutions) {
+			std::cout << s.print();
+		}
 	}
 
 	return 0;

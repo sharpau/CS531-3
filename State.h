@@ -12,6 +12,15 @@ public:
 		std::vector<int> domain;
 	};
 
+	enum rule {
+		SINGLE_DOMAIN,
+		UNIQUE,
+		NAKED_DOUBLES,
+		NAKED_TRIPLES,
+
+		RULE_COUNT
+	};
+
 	// member vars
 	cell board[9][9]; //[row][col]
 	std::string metadata;
@@ -22,7 +31,7 @@ public:
 	std::pair<int, int> selectUnassigned(void);
 	
 	void orderDomain(int x, int y);
-	bool constraintPropagation(void);
+	bool constraintPropagation(const rule strongest = NAKED_TRIPLES);
 
 	std::string print(void);
 
