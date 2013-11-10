@@ -172,39 +172,41 @@ State::constraintPropagation(const rule strongest)
 			// rule #2 - unique value in domain
 			for(int x = 0; x < 9; x++) {
 				for(int y = 0; y < 9; y++) {
-					for(auto v : board[x][y].domain) {
-						bool row_unique = true;
-						bool col_unique = true;
-						bool box_unique = true;
+					if(board[x][y].value == 0) {
+						for(auto v : board[x][y].domain) {
+							bool row_unique = true;
+							bool col_unique = true;
+							bool box_unique = true;
 
-						for(int i = 0; i < 9; i++) {
-							// if domain value exists in row cell's domain, it's not unique
-							if(i != x && std::find(board[i][y].domain.begin(), board[i][y].domain.end(), v) != board[i][y].domain.end()) {
-								row_unique = false;
-							}
+							for(int i = 0; i < 9; i++) {
+								// if domain value exists in row cell's domain, it's not unique
+								if(i != x && std::find(board[i][y].domain.begin(), board[i][y].domain.end(), v) != board[i][y].domain.end()) {
+									row_unique = false;
+								}
 
-							// if domain value exists in column cell's domain, it's not unique
-							if(i != y && std::find(board[x][i].domain.begin(), board[x][i].domain.end(), v) != board[x][i].domain.end()) {
-								col_unique = false;
+								// if domain value exists in column cell's domain, it's not unique
+								if(i != y && std::find(board[x][i].domain.begin(), board[x][i].domain.end(), v) != board[x][i].domain.end()) {
+									col_unique = false;
+								}
 							}
-						}
 
 					
-						for(auto xy : boxOtherCoords(x, y)) {
-							// if domain value exists in box cell's domain, it's not unique
-							if(std::find(board[xy.first][xy.second].domain.begin(), board[xy.first][xy.second].domain.end(), v) != board[xy.first][xy.second].domain.end()) {
-								box_unique = false;
+							for(auto xy : boxOtherCoords(x, y)) {
+								// if domain value exists in box cell's domain, it's not unique
+								if(std::find(board[xy.first][xy.second].domain.begin(), board[xy.first][xy.second].domain.end(), v) != board[xy.first][xy.second].domain.end()) {
+									box_unique = false;
+								}
 							}
-						}
-						if(row_unique || col_unique || box_unique) {
-							board[x][y].value = v;
-							applied = true;
+							if(row_unique || col_unique || box_unique) {
+								board[x][y].value = v;
+								applied = true;
 						
-							if(!updateDomains()) {
-								return false;
-							}
+								if(!updateDomains()) {
+									return false;
+								}
 
-							break;
+								break;
+							}
 						}
 					}
 				}
@@ -237,34 +239,40 @@ State::constraintPropagation(const rule strongest)
 						}
 
 						// if they have the same domain and it is of size 2, remove from other domains
-						if(sameDomRow && board[x][y].domain.size() == 2 && board[i][y].domain.size() == 2) {
+						if(x != i && sameDomRow && board[x][y].domain.size() == 2 && board[i][y].domain.size() == 2) {
 							// remove from other domains in row
 							for(auto v : board[x][y].domain) {
 								for(int j = 0; j < 9; j++) {
 									if(j != x && j != i) {
 										// erase this val from [j][y]'s domain
+										int sz = board[j][y].domain.size();
 										board[j][y].domain.erase(std::remove(board[j][y].domain.begin(), board[j][y].domain.end(), v), board[j][y].domain.end());
-										applied = true;
+										if(sz > board[j][y].domain.size()) {
+											applied = true;
 						
-										if(!updateDomains()) {
-											return false;
+											if(!updateDomains()) {
+												return false;
+											}
 										}
 									}
 								}
 							}
 							break;
 						}
-						if(sameDomCol && board[x][y].domain.size() == 2 && board[x][i].domain.size() == 2) {
+						if(y != i && sameDomCol && board[x][y].domain.size() == 2 && board[x][i].domain.size() == 2) {
 							// remove from other domains in row
 							for(auto v : board[x][y].domain) {
 								for(int j = 0; j < 9; j++) {
-									if(j != x && j != i) {
-										// erase this val from [j][y]'s domain
+									if(j != y && j != i) {
+										// erase this val from [x][j]'s domain
+										int sz = board[x][j].domain.size();
 										board[x][j].domain.erase(std::remove(board[x][j].domain.begin(), board[x][j].domain.end(), v), board[x][j].domain.end());
-										applied = true;
+										if(sz > board[x][j].domain.size()) {
+											applied = true;
 						
-										if(!updateDomains()) {
-											return false;
+											if(!updateDomains()) {
+												return false;
+											}
 										}
 									}
 								}
@@ -286,11 +294,14 @@ State::constraintPropagation(const rule strongest)
 							for(auto v : board[x][y].domain) {
 								for(auto xy2 : boxOtherCoords(x, y)) {
 									if(xy2.first != xy.first || xy2.second != xy.second) {
+										int sz = board[xy2.first][xy2.second].domain.size();
 										board[xy2.first][xy2.second].domain.erase(std::remove(board[xy2.first][xy2.second].domain.begin(), board[xy2.first][xy2.second].domain.end(), v), board[xy2.first][xy2.second].domain.end());
-										applied = true;
+										if(sz > board[xy2.first][xy2.second].domain.size()) {
+											applied = true;
 						
-										if(!updateDomains()) {
-											return false;
+											if(!updateDomains()) {
+												return false;
+											}
 										}
 									}
 								}
