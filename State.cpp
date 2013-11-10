@@ -29,6 +29,37 @@ bool State::isFullyAssigned(void) {
 		}
 	}
 
+	// fully assigned. make sure it's a legit assignment.
+	int total = 9 + 8 + 7 + 6 + 5 + 4 + 3 + 2 + 1;
+	for(int i = 0; i < 9; i++) {
+		int col = 0;
+		int row = 0;
+		for(int j = 0; j < 9; j++) {
+			col += board[i][j].value;
+			row += board[j][i].value;
+		}
+		assert(row == col && col == total);
+	}
+	std::vector<std::pair<int, int>> box_starts;
+	box_starts.push_back(std::make_pair(0, 0));
+	box_starts.push_back(std::make_pair(0, 3));
+	box_starts.push_back(std::make_pair(0, 6));
+	box_starts.push_back(std::make_pair(3, 0));
+	box_starts.push_back(std::make_pair(3, 3));
+	box_starts.push_back(std::make_pair(3, 6));
+	box_starts.push_back(std::make_pair(6, 0));
+	box_starts.push_back(std::make_pair(6, 3));
+	box_starts.push_back(std::make_pair(6, 6));
+	for(auto start : box_starts) {
+		int box = 0;
+		for(int i = 0; i < 3; i++) {
+			for(int j = 0; j < 3; j++) {
+				box += board[start.first + i][start.second + j].value;
+			}
+		}
+		assert(box == total);
+	}
+
 	return true;
 }
 

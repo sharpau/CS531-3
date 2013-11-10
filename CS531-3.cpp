@@ -5,7 +5,7 @@
 #include "State.h"
 
 extern unsigned long backtracks;
-std::vector<State> solutions;
+std::vector<std::vector<State>> solutions;
 
 std::vector<State> loadProblems(std::string filename) {
 	std::fstream problems_file(filename);
@@ -72,7 +72,7 @@ bool backtrack(State problem, const State::rule strongest) {
 	*/
 
 	if(problem.isFullyAssigned()) {
-		solutions.push_back(problem);
+		solutions.back().push_back(problem);
 		return true;
 	}
 
@@ -106,14 +106,18 @@ int _tmain(int argc, _TCHAR* argv[])
 	auto problems = loadProblems("sudoku.txt");
 	
 	for(unsigned int r = State::SINGLE_DOMAIN; r < State::RULE_COUNT; r++) {
-		for(int i = 0; i < 5; i++) {
+		solutions.push_back(std::vector<State>());
+		for(int i = 0; i < 4; i++) {
 			backtracks = 0;
 			problems[i].constraintPropagation((State::rule)r);
 			bool result = backtrack(problems[i], (State::rule)r);
-			solutions.back().num_backtracks = backtracks;
+			solutions.back().back().num_backtracks = backtracks;
 		}
+	}
 
-		for(auto s : solutions) {
+	for(int i = 0; i < solutions.size(); i++) {
+		for(auto s : solutions[i]) {
+			std::cout << "Rules used: " << i + 1 << "\n";
 			std::cout << s.print();
 		}
 	}
