@@ -150,7 +150,7 @@ State::constraintPropagation(void)
 	bool applied = true;
 	while(applied) {
 		applied = false; // only continue if some rule is applied
-		// rule #1
+		// rule #1 - domain of size 1
 		for(int x = 0; x < 9; x++) {
 			for(int y = 0; y < 9; y++) {
 				if(board[x][y].value == 0 && board[x][y].domain.size() == 1) {
@@ -165,7 +165,7 @@ State::constraintPropagation(void)
 			}
 		}
 
-		// rule #2
+		// rule #2 - unique value in domain
 		for(int x = 0; x < 9; x++) {
 			for(int y = 0; y < 9; y++) {
 				for(auto v : board[x][y].domain) {
@@ -194,11 +194,28 @@ State::constraintPropagation(void)
 					}
 					if(row_unique || col_unique || box_unique) {
 						board[x][y].value = v;
+						applied = true;
+						
+						if(!updateDomains()) {
+							return false;
+						}
+
 						break;
 					}
 				}
 			}
 		}
+
+		// rule #3 - naked doubles, k = 2
+		/*
+			for each row, col, box
+				for each cell within
+					check if any other cells in row/col/box have same domain
+					if so, record coords of the two and the domain. remove each domain item from all others in row/col/box.
+		*/
+
+
+		// rule #4 - naked triples, k = 3
 	}
 
 	return true;
