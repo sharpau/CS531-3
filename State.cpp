@@ -567,6 +567,19 @@ State::print(void) {
 	return out.str();
 }
 
+int
+State::unassignedCount(void) {
+	int cnt = 0;
+	for(int i = 0; i < 9; i++) {
+		for(int j = 0; j < 9; j++) {
+			if(board[i][j].value == 0) {
+				cnt++;
+			}
+		}
+	}
+	return cnt;
+}
+
 // initializes board to all unknowns with domain of 1-9
 State::State(void)
 {

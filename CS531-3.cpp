@@ -111,17 +111,23 @@ int _tmain(int argc, _TCHAR* argv[])
 	for(auto p : problems) {
 		if(p.metadata.find("evil") != std::string::npos || p.metadata.find("Evil") != std::string::npos) {
 			evil_count++;
+			evil_blank += p.unassignedCount();
 		}
 		else if(p.metadata.find("hard") != std::string::npos || p.metadata.find("Hard") != std::string::npos) {
 			hard_count++;
+			hard_blank += p.unassignedCount();
 		}
 		else if(p.metadata.find("medium") != std::string::npos || p.metadata.find("Medium") != std::string::npos) {
-			medium_count++;
+			med_count++;
+			med_blank += p.unassignedCount();
 		}
 		else if(p.metadata.find("easy") != std::string::npos || p.metadata.find("Easy") != std::string::npos) {
 			easy_count++;
+			easy_blank += p.unassignedCount();
 		}
 	}
+	std::cout << "Average blanks\n" << "evil: " << evil_blank / evil_count << " hard: " << hard_blank / hard_count;
+	std::cout << " medium: " << med_blank / med_count << " easy: " << easy_blank / easy_count << "\n";
 
 	for(unsigned int r = State::SINGLE_DOMAIN; r < State::RULE_COUNT; r++) {
 		solutions.push_back(std::vector<State>());

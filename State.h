@@ -34,6 +34,7 @@ public:
 	bool constraintPropagation(const rule strongest = NAKED_TRIPLES);
 
 	std::string print(void);
+	int unassignedCount(void);
 
 	State(void);
 	~State(void);
