@@ -51,7 +51,7 @@ std::vector<State> loadProblems(std::string filename) {
 }
 
 // returns success or failure
-bool backtrack(State problem, const State::rule strongest) {
+bool backtrack(State problem, const State::rule strongest, const bool random) {
 	// backtracking pseudocode
 	// TODO: inference
 	/*
@@ -77,7 +77,7 @@ bool backtrack(State problem, const State::rule strongest) {
 	}
 
 	// select most constrained variable
-	auto var = problem.selectUnassigned();
+	auto var = problem.selectUnassigned(random);
 	//State::cell & cur = problem.board[var.first][var.second];
 
 	// order cur.domain values from least to most constraining
@@ -90,7 +90,7 @@ bool backtrack(State problem, const State::rule strongest) {
 		bool inference = new_val.constraintPropagation(strongest);
 		if(inference) {
 			// valid inference, continue to next var
-			bool result = backtrack(new_val, strongest);
+			bool result = backtrack(new_val, strongest, random);
 			if(result) {
 				return result;
 			}
@@ -103,22 +103,62 @@ bool backtrack(State problem, const State::rule strongest) {
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	srand(time(0));
+
 	auto problems = loadProblems("sudoku.txt");
-	
+
+	unsigned int easy_count = 0, easy_blank = 0, med_count = 0, med_blank = 0, hard_count = 0, hard_blank = 0, evil_count = 0, evil_blank = 0;
+	for(auto p : problems) {
+		if(p.metadata.find("evil") != std::string::npos || p.metadata.find("Evil") != std::string::npos) {
+			evil_count++;
+		}
+		else if(p.metadata.find("hard") != std::string::npos || p.metadata.find("Hard") != std::string::npos) {
+			hard_count++;
+		}
+		else if(p.metadata.find("medium") != std::string::npos || p.metadata.find("Medium") != std::string::npos) {
+			medium_count++;
+		}
+		else if(p.metadata.find("easy") != std::string::npos || p.metadata.find("Easy") != std::string::npos) {
+			easy_count++;
+		}
+	}
+
 	for(unsigned int r = State::SINGLE_DOMAIN; r < State::RULE_COUNT; r++) {
 		solutions.push_back(std::vector<State>());
-		for(int i = 0; i < 4; i++) {
+		for(int i = 0; i < problems.size(); i++) {
 			backtracks = 0;
 			problems[i].constraintPropagation((State::rule)r);
-			bool result = backtrack(problems[i], (State::rule)r);
+			bool result = backtrack(problems[i], (State::rule)r, false);
 			solutions.back().back().num_backtracks = backtracks;
 		}
 	}
 
+	std::ofstream verbose("non_random_results.txt");
+	verbose << "rules used, problem, difficulty, backtracks\n";
 	for(int i = 0; i < solutions.size(); i++) {
 		for(auto s : solutions[i]) {
-			std::cout << "Rules used: " << i + 1 << "\n";
-			std::cout << s.print();
+			verbose << i + 1 << ",";
+			verbose << s.print();
+		}
+	}
+
+	solutions.clear();
+	for(unsigned int r = State::SINGLE_DOMAIN; r < State::RULE_COUNT; r++) {
+		solutions.push_back(std::vector<State>());
+		for(int i = 0; i < problems.size(); i++) {
+			backtracks = 0;
+			problems[i].constraintPropagation((State::rule)r);
+			bool result = backtrack(problems[i], (State::rule)r, true);
+			solutions.back().back().num_backtracks = backtracks;
+		}
+	}
+
+	std::ofstream verbose_random("random_results.txt");
+	verbose_random << "rules used, problem, difficulty, backtracks\n";
+	for(int i = 0; i < solutions.size(); i++) {
+		for(auto s : solutions[i]) {
+			verbose_random << i + 1 << ",";
+			verbose_random << s.print();
 		}
 	}
 

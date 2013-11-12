@@ -65,25 +65,35 @@ bool State::isFullyAssigned(void) {
 
 // returns the best variable to find a value for
 std::pair<int, int> 
-State::selectUnassigned(void) {
-	int x_min, y_min;
-	int min_domain = INT_MAX;
+State::selectUnassigned(const bool random) {
+	if(random) {
+		while(true) {
+			int x = rand() % 9;
+			int y = rand() % 9;
 
-	for(int i = 0; i < 9; i++) {
-		for(int j = 0; j < 9; j++) {
-			if(board[i][j].value == 0 && board[i][j].domain.size() < min_domain) {
-				min_domain = board[i][j].domain.size();
-				x_min = i;
-				y_min = j;
+			if(board[x][y].value == 0) {
+				return std::make_pair(x, y);
 			}
 		}
 	}
+	else {
+		int x_min, y_min;
+		int min_domain = INT_MAX;
 
-	if(min_domain == INT_MAX) {
-		std::cout << "we have a problem";
+		for(int i = 0; i < 9; i++) {
+			for(int j = 0; j < 9; j++) {
+				if(board[i][j].value == 0 && board[i][j].domain.size() < min_domain) {
+					min_domain = board[i][j].domain.size();
+					x_min = i;
+					y_min = j;
+				}
+			}
+		}
+
+		assert(min_domain < 10);
+
+		return std::make_pair(x_min, y_min);
 	}
-
-	return std::make_pair(x_min, y_min);
 }
 
 bool
@@ -524,10 +534,23 @@ State::orderDomain(int x, int y) {
 std::string
 State::print(void) {
 	std::stringstream out;
-	out << metadata;
-	out << '\n';
-	out << "backtracks: " << num_backtracks << '\n';
-	for(int i = 0; i < 9; i++) {
+	//out << metadata;
+
+	if(metadata.find("evil") != std::string::npos || metadata.find("Evil") != std::string::npos) {
+		out << "evil";
+	}
+	else if(metadata.find("hard") != std::string::npos || metadata.find("Hard") != std::string::npos) {
+		out << "hard";
+	}
+	else if(metadata.find("medium") != std::string::npos || metadata.find("Medium") != std::string::npos) {
+		out << "medium";
+	}
+	else if(metadata.find("easy") != std::string::npos || metadata.find("Easy") != std::string::npos) {
+		out << "easy";
+	}
+
+	out << ',' << num_backtracks << '\n';
+	/*for(int i = 0; i < 9; i++) {
 		for(int j = 0; j < 9; j++) {
 			out << board[i][j].value;
 			if(j == 8) {
@@ -540,7 +563,7 @@ State::print(void) {
 		if(i % 3 == 2) {
 			out << '\n';
 		}
-	}
+	}*/
 	return out.str();
 }
 

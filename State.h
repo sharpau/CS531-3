@@ -28,7 +28,7 @@ public:
 
 	// member functions
 	bool isFullyAssigned(void);
-	std::pair<int, int> selectUnassigned(void);
+	std::pair<int, int> selectUnassigned(const bool random = false);
 	
 	void orderDomain(int x, int y);
 	bool constraintPropagation(const rule strongest = NAKED_TRIPLES);
